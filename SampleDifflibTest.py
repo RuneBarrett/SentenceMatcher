@@ -22,7 +22,3 @@ print(inpList)
 
 ratio = SequenceMatcher(None, b4.lower(), b5.lower()).ratio()
 print(ratio)
-
-
-# ABSTRACT PSEUDO
-# cut sentence until first . / get next sentence in array split on .

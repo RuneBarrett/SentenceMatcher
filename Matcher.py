@@ -1,21 +1,24 @@
 import pickle
 
 useSampleData = True
-origBookText, response = None, None
-currentPos = 0
-sentenceCount = 0
+origBookText, response = "", None
+currentPos, sentenceCount = 0, 0
 
 
 def main():
+    # Collects data either through the cloud or locally
     loadData()
-    #sentenceCount = origBookText.count(".") + 1
-    #print(sentenceCount, getOrigSentence())
+    # this is too simple, but works for now (splits on abbreviations for example)
     sentences = origBookText.split(". ")
     for s in sentences:
         print(s.strip(), "\n")
 
 
-def getOrigSentence():
+def compareSentence(origSen, transSen):
+    print("")
+
+
+def getOrigSentence():  # Manual sentence splitter "skeleton"
     global currentPos, origBookText
     origBookText = origBookText[currentPos:len(origBookText)]
     endPos = origBookText.find(".")
@@ -24,14 +27,16 @@ def getOrigSentence():
     return sentence
 
 
-def loadData():
+def loadData():  # Collects data either from the cloud or locally depending on useSampleData
     global response, origBookText
-    if useSampleData:  # pretranscribed sample data
+    # pretranscribed sample data
+    if useSampleData:
         origBookText = open("data/008_7pet_sample.txt", "r").read()
         with open("data/response_obj.pkl", 'rb') as input:
             response = pickle.load(input)
-    else:  # use google cloud STT
-        print("cloud STT")
+    # use google cloud STT
+    else:
+        print("cloud STT")  # call transcibe_async.py
 
 
-main()
+main()  # python "hack" to use a main func
