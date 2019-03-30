@@ -1,6 +1,6 @@
 """
 Example usage:
-    python transcribe_async.py data/kap1_7pet_29.wav
+    python transcribe_async.py data/audio/kap1_7pet_29.wav
     python transcribe_async.py gs://abook_data/008_7pet.wav
 """
 
@@ -17,25 +17,6 @@ CLIENT = speech.SpeechClient()
 LANGUAGE_CODE = "da-DK"
 HERTZ = 44100
 ENCODING = enums.RecognitionConfig.AudioEncoding.LINEAR16
-
-
-def handle_results(response):
-    """#handles a result object for testing/printing"""
-    for result in response.results:
-        # The first alternative is the most likely one for this portion.
-        print(u'Transcript: {}'.format(result.alternatives[0].transcript))
-        print('Confidence: {}'.format(result.alternatives[0].confidence))
-    save_object(response, "response_obj.pkl")
-
-
-def get_config():
-    """#configures a request for the STT API"""
-    # pylint: disable=no-member
-    return types.RecognitionConfig(
-        encoding=ENCODING,
-        sample_rate_hertz=HERTZ,
-        language_code=LANGUAGE_CODE,
-        enable_word_time_offsets=True)
 
 
 def transcribe_file(speech_file):
@@ -81,6 +62,25 @@ def transcribe_gcs(gcs_uri):
 
     # save the python response object to the disk for later use
     save_object(response, "response_obj.pkl")
+
+
+def handle_results(response):
+    """#handles a result object for testing/printing"""
+    for result in response.results:
+        # The first alternative is the most likely one for this portion.
+        print(u'Transcript: {}'.format(result.alternatives[0].transcript))
+        print('Confidence: {}'.format(result.alternatives[0].confidence))
+    save_object(response, "response_obj.pkl")
+
+
+def get_config():
+    """#configures a request for the STT API"""
+    # pylint: disable=no-member
+    return types.RecognitionConfig(
+        encoding=ENCODING,
+        sample_rate_hertz=HERTZ,
+        language_code=LANGUAGE_CODE,
+        enable_word_time_offsets=True)
 
 
 def save_object(obj, filename):

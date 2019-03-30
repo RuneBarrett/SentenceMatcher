@@ -4,7 +4,7 @@ from google.protobuf.json_format import MessageToJson
 
 
 def main():
-    with open("data/response_obj.pkl", 'rb') as input:
+    with open("data/obj_storage/response_obj.pkl", 'rb') as input:
         response = pickle.load(input)
     print_it(response)
 
