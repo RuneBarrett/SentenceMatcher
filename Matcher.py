@@ -2,20 +2,45 @@
 Usage: python matcher.py gs://abook_data/008_7pet.wav
 """
 import pickle
+import re
 
 USE_SAMPLE_DATA = True
+ORIG_BOOK_TEXT = open("data/text/008_7pet_sample.txt", "r").read()
+SAMPLE_ABBR = ["11. ", "bl.a."]
 
 
 def main():
     """The main process of the program"""
 
     # Collects data either through the cloud or locally
-    orig_book_text, response = load_data()
+
+    response = load_data()
 
     # this is too simple, but works for now (splits on abbreviations for example)
-    sentences = orig_book_text.split(". ")
+    # sentences = ORIG_BOOK_TEXT.split(".")
+    sentences = split_and_clean_data()
     for sen in sentences:
-        print(sen.strip(), "\n")
+        print(sen, "\n")
+
+
+def split_and_clean_data():
+    i = 0
+    sentences = []
+    sen = ""
+    for c in ORIG_BOOK_TEXT:
+        look_ahead_behind = ORIG_BOOK_TEXT[i-4:i+4]
+        sen = sen+c
+        if((c == "." or c == "?" or c == "!") and find_abbreviations(look_ahead_behind) == None):
+            sentences.append(sen.strip())
+            sen = ""
+        i += 1
+    return sentences
+
+
+def find_abbreviations(text):
+    r = re.search("\d*\. [a-z|ø|å|æ]", text)
+    print(r,  " - ", text, "\n")
+    return r
 
 
 def load_data():
@@ -23,17 +48,17 @@ def load_data():
 
     # pretranscribed sample data
     if USE_SAMPLE_DATA:
-        orig_book_text = open("data/text/008_7pet_sample.txt", "r").read()
+        # ORIG_BOOK_TEXT = open("data/text/008_7pet_sample.txt", "r").read()
         with open("data/obj_storage/response_obj.pkl", 'rb') as inp:
             response = pickle.load(inp)
 
     # use google cloud STT
     else:
         print("use STT API call")  # call transcibe_async.py
-        orig_book_text = None
+        # ORIG_BOOK_TEXT = None
         response = None
 
-    return orig_book_text, response
+    return response
 
 
 main()  # python "hack" to use a main func in the top of the file
