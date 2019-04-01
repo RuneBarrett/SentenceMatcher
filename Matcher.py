@@ -16,11 +16,31 @@ def main():
 
     response = load_data()
 
-    # this is too simple, but works for now (splits on abbreviations for example)
     # sentences = ORIG_BOOK_TEXT.split(".")
     sentences = split_and_clean_data()
-    for sen in sentences:
-        print(sen, "\n")
+    # for sen in sentences:
+    #    print(sen, "\n")
+
+    remove_non_word_digit(sentences)
+
+
+def remove_non_word_digit(sentences):
+    sentences_corrected = []
+    for s in sentences:
+        sentence = s.split()
+        sen_corrected = []
+        for w in sentence:
+            while(len(w) > 1 and re.search("\d|\w", w[0]) == None):
+                w = w[1:len(w)]
+            while(len(w) > 1 and re.search("\d|\w", w[len(w)-1]) == None):
+                w = w[:len(w)-1]
+            if(len(w) == 1):
+                if(re.search("\d|\w", w) == None):
+                    w = ""
+            sen_corrected.append(w)
+            #print(w, len(w))
+        print(" ".join(sen_corrected), "\n")
+        # print(s)
 
 
 def split_and_clean_data():
@@ -39,7 +59,7 @@ def split_and_clean_data():
 
 def find_abbreviations(text):
     r = re.search("\d*\. [a-z|ø|å|æ]", text)
-    print(r,  " - ", text, "\n")
+    #print(r,  " - ", text, "\n")
     return r
 
 
