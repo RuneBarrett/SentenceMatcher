@@ -8,7 +8,8 @@ import pickle
 import re
 
 USE_SAMPLE_DATA = True
-ORIG_BOOK_TEXT = open("data/text/008_7pet_sample.txt", encoding="ANSI").read()
+ORIG_BOOK_TEXT = open("data/text/008_7pet_sample_.txt",
+                      encoding="utf-8").read()
 #SAMPLE_ABBR = ["11. ", "bl.a."]
 
 
