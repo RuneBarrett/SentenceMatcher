@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 """
 Usage: python matcher.py gs://abook_data/008_7pet.wav
 """
@@ -5,8 +8,8 @@ import pickle
 import re
 
 USE_SAMPLE_DATA = True
-ORIG_BOOK_TEXT = open("data/text/008_7pet_sample.txt", "r").read()
-SAMPLE_ABBR = ["11. ", "bl.a."]
+ORIG_BOOK_TEXT = open("data/text/008_7pet_sample.txt", encoding="ANSI").read()
+#SAMPLE_ABBR = ["11. ", "bl.a."]
 
 
 def main():
@@ -16,14 +19,18 @@ def main():
 
     response = load_data()
 
-    # sentences = ORIG_BOOK_TEXT.split(".")
     sentences = split_and_clean_data()
-    # for sen in sentences:
-    #    print(sen, "\n")
+    sentences = remove_non_word_digit(sentences)
 
-    remove_non_word_digit(sentences)
+    for sen in sentences:
+        print(sen, "\n")
 
 
+def matcher():
+    return None
+
+
+# TODO: Handle special characters that should remain in the sentence - removes period from "11. september" and similar
 def remove_non_word_digit(sentences):
     sentences_corrected = []
     for s in sentences:
@@ -40,7 +47,9 @@ def remove_non_word_digit(sentences):
             sen_corrected.append(w)
             #print(w, len(w))
         print(" ".join(sen_corrected), "\n")
-        # print(s)
+        sentences_corrected.append(" ".join(sen_corrected))
+    return sentences_corrected
+    # print(s)
 
 
 def split_and_clean_data():
