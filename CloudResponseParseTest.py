@@ -1,5 +1,6 @@
 import pickle
 import json
+import inspect
 from google.protobuf.json_format import MessageToJson
 
 
@@ -14,6 +15,8 @@ def main():
 
 
 def print_it(response):
+    # print(inspect.getmembers(response))
+    # return
     for result in response.results:
         alternative = result.alternatives[0]
         print(u'Transcript: {}'.format(alternative.transcript))
@@ -23,10 +26,13 @@ def print_it(response):
             word = word_info.word
             start_time = word_info.start_time
             end_time = word_info.end_time
-            print('Word: {}, start_time: {}, end_time: {}'.format(
+            conf = word_info.confidence
+            print('Word: {}, start_time: {}, end_time: {}, conf: {}'.format(
                 word,
                 start_time.seconds + start_time.nanos * 1e-9,
-                end_time.seconds + end_time.nanos * 1e-9))
+                end_time.seconds + end_time.nanos * 1e-9,
+                conf))
+        break
 
 
 main()

@@ -7,16 +7,16 @@ Example usage:
 import pickle
 import argparse
 import io
-from google.cloud import speech
-from google.cloud.speech import enums
-from google.cloud.speech import types
+from google.cloud import speech_v1p1beta1 as speech
+#from google.cloud.speech import enums
+#from google.cloud.speech import types
 
 CLIENT = speech.SpeechClient()
 
 # config variables
 LANGUAGE_CODE = "da-DK"
 HERTZ = 44100
-ENCODING = enums.RecognitionConfig.AudioEncoding.LINEAR16
+ENCODING = speech.enums.RecognitionConfig.AudioEncoding.LINEAR16
 
 
 def transcribe_file(speech_file):
@@ -27,7 +27,7 @@ def transcribe_file(speech_file):
 
     # create audio object from file
     # pylint: disable=no-member
-    audio = types.RecognitionAudio(content=content)
+    audio = speech.types.RecognitionAudio(content=content)
 
     # create a request configuration
     config = get_config()
@@ -47,7 +47,7 @@ def transcribe_gcs(gcs_uri):
 
     # create audio object from uri
     # pylint: disable=no-member
-    audio = types.RecognitionAudio(uri=gcs_uri)
+    audio = speech.types.RecognitionAudio(uri=gcs_uri)
 
     # create a request configuration
     config = get_config()
@@ -61,7 +61,7 @@ def transcribe_gcs(gcs_uri):
     handle_results(response)
 
     # save the python response object to the disk for later use
-    save_object(response, "response_obj.pkl")
+    #save_object(response, "response_obj.pkl")
 
 
 def handle_results(response):
@@ -76,16 +76,17 @@ def handle_results(response):
 def get_config():
     """#configures a request for the STT API"""
     # pylint: disable=no-member
-    return types.RecognitionConfig(
+    return speech.types.RecognitionConfig(
         encoding=ENCODING,
         sample_rate_hertz=HERTZ,
         language_code=LANGUAGE_CODE,
-        enable_word_time_offsets=True)
+        enable_word_time_offsets=True,
+        enable_word_confidence=True)
 
 
 def save_object(obj, filename):
     """Saves the response object to a file"""
-    with open(filename, 'wb') as output:
+    with open("data/obj_storage/"+filename, 'wb') as output:
         pickle.dump(obj, output, pickle.HIGHEST_PROTOCOL)
 
 

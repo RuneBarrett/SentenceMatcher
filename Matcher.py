@@ -6,10 +6,14 @@ Usage: python matcher.py gs://abook_data/008_7pet.wav
 """
 import pickle
 import re
+from difflib import SequenceMatcher
+
+
+import text_input_handler as t_inp_handler
 
 USE_SAMPLE_DATA = True
 ORIG_BOOK_TEXT = open("data/text/008_7pet_sample.txt", encoding="utf-8").read()
-ABBREVIATIONS = ["bl.a.", "ca.", "f.eks.", "d.", r"\d+\."]
+ABBREVIATIONS = ["bl.a.", "f.eks.", "d.", "ca."]
 MATCH_DIGIT_WORD_REGEX = r"\d|\w"
 # SAMPLE_ABBR = ["11. ", "bl.a."]
 
@@ -18,88 +22,150 @@ def main():
     """The main process of the program"""
 
     # Collect STT data either through the cloud or locally
-    transscribed_input = load_data()
 
-    sentences = split_to_sentences(ORIG_BOOK_TEXT)
-    sentences = tokenize_and_clean_sentences(sentences)
+    sentences = t_inp_handler.clean_and_split_sentences(ORIG_BOOK_TEXT)
+    transcribed_input = load_data()
+    transcribed_words = convert_transcript_to_word_objects(transcribed_input)
+    test(sentences, transcribed_words)
+    return
+
+    matching(sentences, transcribed_words)
 
     # for sen in sentences:
     #    print(sen, "\n")
 
 
-def tokenize_and_clean_sentences(sentences):
-    # for storing and returning the cleaned sentences
-    sentences_cleaned = []
+def matching(sentences, t_sentences):
+    t_i = 0
 
     for s in sentences:
-        # for storing the cleaned words in a sentence
-        cleaned_tokens = []
+        temp_i = 0
+        temp_str = ""
+        for w in s.split():
+            temp_str += t_sentences[temp_i].word + " "
+            temp_i += 1
+        print("", s, "\n", temp_str)
 
-        # split sentence on " "
-        tokens = s.split()
+        # for w in s.split():
+        #     s = sim(w, t_sen[t_i].word)
+        #     print(w, t_sen[t_i].word, s)
+        #     t_i += 1
 
-        for w in tokens:
-            # check if the word is a known abbreviation
-            found = False
-            for a in ABBREVIATIONS:
-                if (a == w):  # re.search(a, w)):
-                    found = True
+        #     if(s < 0.9):
+        #         print("p")
+        # print(" ".join((s.split()[-5:])))
 
-            # check patterns
-            if(re.search(r"\d+\.", w)):
-                found = True
+        i_t = 0
+        i_s = 0
+        done = False
+        sen = s.split()
+        while(not done):
+            if(sim(sen[i_s], t_sentences[i_t].word) > 0.9):
+                print(sen[i_s], t_sentences[i_t].word,
+                      sim(sen[i_s], t_sentences[i_t].word))
+                i_t += 1
+                i_s += 1
+            else:
+                print("problem")
+                done = True
+        break
 
-            # remove non word/digit characters from the start of the word
-            while(not found and len(w) >= 1 and re.search(MATCH_DIGIT_WORD_REGEX, w[0]) == None):
-                w = w[1:len(w)] if len(w) > 1 else ""
-
-            # if not an abbreviation, remove non word/digit characters from end of string
-            while(not found and len(w) >= 1 and re.search(MATCH_DIGIT_WORD_REGEX, w[len(w)-1]) == None):
-                w = w[:len(w)-1] if len(w) > 1 else ""
-
-            # if the word is only one character, check if word/digit
-            # if(len(w) == 1 and re.search(MATCH_DIGIT_WORD_REGEX, w) == None):
-            #    w = ""
-
-            # append the cleaned word to cleaned_tokens
-            cleaned_tokens.append(w)
-
-        # print(" ".join(cleaned_tokens), "\n")
-
-        # append the cleaned sentence to sentences_cleaned
-        sentences_cleaned.append(" ".join(cleaned_tokens))
-
-    return sentences_cleaned
-    # print(s)
+    return None
 
 
-def split_to_sentences(text_input):
-    i = 0
-    sentences = []
-    sen = ""
-    for c in text_input:
-        look_ahead_behind = text_input[i-15:i+15]
-        if((c == "." or c == "?" or c == "!") and find_abbreviations(look_ahead_behind) == False):
-            sentences.append(sen.strip())
-            sen = ""
-        else:
-            sen = sen+c
-        i += 1
-    return sentences
+def test(sentences, t_sentences):
+    LOOK_AHEAD_BEHIND = 5
+    tester = 0
+    next_startpoint = 0
+    cur_startpoint = 0
+    for s in sentences:
+
+        print(" ---------------- \nstart: {} - {}".format(next_startpoint, s))
+        str = ""
+        i = -LOOK_AHEAD_BEHIND
+        best_match = ""
+        best_i = 0
+        best_sim = 0.0
+
+        # Find best end of sentence
+        while i <= LOOK_AHEAD_BEHIND:
+            cur_startpoint = next_startpoint
+            arr = t_sentences[cur_startpoint:cur_startpoint +
+                              len(s.split())+i]
+            str = ""
+            for a in arr:
+                str += a.word+" "
+
+            #print("i_e = {}: {}".format(i, str))
+            similarity = sim(s, str)
+            if(similarity >= best_sim):
+                best_sim = similarity
+                best_match = "{}\n{} - {}\n".format(s, str, similarity)
+                best_i = i
+
+            #print(similarity, i)
+            i += 1
+
+        next_startpoint = cur_startpoint + len(s.split()) + best_i
+        #print("\n" + best_match)
+
+        i = -LOOK_AHEAD_BEHIND
+        best_sim = 0.0
+        best_i_s = 0
+
+        # find best start of sentence
+        while cur_startpoint > LOOK_AHEAD_BEHIND and i <= LOOK_AHEAD_BEHIND:
+            arr = t_sentences[cur_startpoint +
+                              i: cur_startpoint + len(s.split()) + best_i]
+            str = ""
+            for a in arr:
+                str += a.word+" "
+
+            #print("i_s = {}: {}".format(i, str))
+
+            similarity = sim(s, str)
+            if(similarity >= best_sim):
+                best_sim = similarity
+                best_match = "{}\n{} - {}\n".format(s, str, similarity)
+                best_i_s = i
+
+            #print(similarity, i)
+            i += 1
+        print("\n" + best_match, best_i_s)
+
+        if(tester > 2):
+            break
+    #tester += 1
 
 
-def find_abbreviations(text):
-    found = False
+def sim(w1, w2):
+    return SequenceMatcher(None, w1, w2).ratio()
 
-    if(re.search(r"\d+\.", text)):  # re.search(r"\d+\. [a-z|ø|å|æ]", text)
-        found = True
 
-    for a in ABBREVIATIONS:
-        l = len(text)//2
-        text[l-len(a):l+len(a)]
-        if a in text:
-            found = True
-    return found
+def convert_transcript_to_word_objects(transcribed_input):
+    output = []
+    # print(inspect.getmembers(transcribed_input))
+    for result in transcribed_input.results:
+        for w in result.alternatives[0].words:
+            output.append(word(w.word,
+                               w.start_time.seconds + w.start_time.nanos*1e-9,
+                               w.end_time.seconds + w.end_time.nanos*1e-9,
+                               w.confidence))
+    # for obj in output:
+        # obj.printer()
+    return output
+
+
+class word:
+    def __init__(self, word, s_time, e_time, conf):
+        self.word = word
+        self.s_time = s_time
+        self.e_time = e_time
+        self.conf = conf
+
+    def printer(self):
+        print('Word: {}, s_time: {}, e_time: {}, conf: {}'.format(
+            self.word, self.s_time, self.e_time, self.conf))
 
 
 def load_data():
