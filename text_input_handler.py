@@ -2,6 +2,7 @@ import re
 
 ABBREVIATIONS = ["bl.a.", "f.eks.", "d.", "ca."]
 MATCH_DIGIT_WORD_REGEX = r"\d|\w"
+DIGIT_NUMBERING_REGEX = r"\d+\."
 
 
 def clean_and_split_sentences(text_input):
@@ -29,7 +30,7 @@ def tokenize_and_clean_sentences(sentences):
                     w = a
 
             # check patterns
-            if(re.search(r"\d+\.", w)):
+            if(re.search(DIGIT_NUMBERING_REGEX, w)):
                 found = True
 
             # remove non word/digit characters from the start of the word
@@ -74,7 +75,8 @@ def split_to_sentences(text_input):
 def find_abbreviations(text):
     found = False
 
-    if(re.search(r"\d+\.", text)):  # re.search(r"\d+\. [a-z|ø|å|æ]", text)
+    # re.search(r"\d+\. [a-z|ø|å|æ]", text)
+    if(re.search(r"\d+\. [a-å]", text)):
         found = True
 
     for a in ABBREVIATIONS:

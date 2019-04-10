@@ -7,7 +7,8 @@ Usage: python matcher.py gs://abook_data/008_7pet.wav
 import pickle
 import re
 from difflib import SequenceMatcher
-
+from pydub import AudioSegment
+# from pydub.playback import play
 
 import text_input_handler as t_inp_handler
 
@@ -22,17 +23,39 @@ def main():
     """The main process of the program"""
 
     # Collect STT data either through the cloud or locally
+    sound = AudioSegment.from_file("data/audio/008_7pet.wav", format="wav")
+    print(len(sound))
+    # sound_out =
+    # sound[:10000].export("hello_sound.mp3", format="mp3")
+    # return
 
     sentences = t_inp_handler.clean_and_split_sentences(ORIG_BOOK_TEXT)
     transcribed_input = load_data()
     transcribed_words = convert_transcript_to_word_objects(transcribed_input)
-    test(sentences, transcribed_words)
-    return
+    t = test(sentences, transcribed_words)
+    # return
 
-    matching(sentences, transcribed_words)
+    # for tt in t:
+    #     print("{}, {}, {}".format(tt.sen, tt.s_index, tt.e_index))
+    #     e_i = tt.e_index if (tt.e_index <= len(
+    #         transcribed_words)) else len(transcribed_words)
 
-    # for sen in sentences:
-    #    print(sen, "\n")
+    #     print(
+    #         "s:{} - e:{}\n".format(transcribed_words[tt.s_index].word, transcribed_words[e_i-1].word))
+
+    print("exporting audio")
+    for j, sen in enumerate(t):
+        w_s = transcribed_words[sen.s_index]
+        if sen.e_index > len(transcribed_words):
+            sen.e_index = len(transcribed_words)-1
+        w_e = transcribed_words[sen.e_index]
+        # if w_e.e_time > len(sound):
+        #    w_e.e_time = len(sound)
+        print(w_s.s_time*1000, w_e.e_time*1000)
+        s_time = w_s.s_time*1000+400 if w_s.s_time > 0 else w_s.s_time*1000
+        e_time = w_e.e_time*1000  # -200
+        sound[s_time:e_time].export(
+            "data/audio/output/{}-{}{}".format("%07.1f" % w_s.s_time, "%07.1f" % w_e.e_time, ".mp3"), format="mp3")
 
 
 def matching(sentences, t_sentences):
@@ -74,9 +97,10 @@ def matching(sentences, t_sentences):
 
 
 def test(sentences, t_sentences):
-    LOOK_AHEAD_BEHIND = 10
+    LOOK_AHEAD_BEHIND = 20
     next_startpoint = 0
     cur_startpoint = 0
+    sentences_final = []
     for sen_i, s in enumerate(sentences):
 
         print("-------- SENTENCE {} ---------".format(sen_i))
@@ -101,7 +125,7 @@ def test(sentences, t_sentences):
                     s, str, similarity)
                 best_i = i
 
-            #print(similarity, i)
+            # print(similarity, i)
             i += 1
         print("Startpos: {} Endpos: {}".format(next_startpoint,
                                                cur_startpoint + len(s.split()) + best_i))
@@ -120,7 +144,7 @@ def test(sentences, t_sentences):
             for a in arr:
                 str += a.word+" "
 
-            #print("i_s = {}: {}".format(i, str))
+            # print("i_s = {}: {}".format(i, str))
 
             similarity = sim(s, str)
             if(similarity >= best_sim):
@@ -129,20 +153,23 @@ def test(sentences, t_sentences):
                     s, str, similarity)
                 best_i_s = i
 
-            #print(similarity, i)
+            # print(similarity, i)
             i += 1
 
         str2 = ""
-        #print(best_i_s-plus_minus, best_i+plus_minus)
+        # print(best_i_s-plus_minus, best_i+plus_minus)
         for b in t_sentences[cur_startpoint-LOOK_AHEAD_BEHIND: next_startpoint+LOOK_AHEAD_BEHIND]:
             str2 += b.word+" "
         print("\n{}\n\nMoved start pos amount: {} \nMoved end pos amount: {}".format(
             best_match, best_i_s, best_i))
         print("\nTranscribed +- {}:\n{}\n ------------------------------ \n".format(LOOK_AHEAD_BEHIND, str2))
+        sentences_final.append(sentence_final(
+            s, cur_startpoint, next_startpoint))
+    return sentences_final
 
 
 def sim(w1, w2):
-    return SequenceMatcher(None, w1, w2).ratio()
+    return SequenceMatcher(None, w1.lower(), w2.lower()).ratio()
 
 
 def convert_transcript_to_word_objects(transcribed_input):
@@ -150,7 +177,7 @@ def convert_transcript_to_word_objects(transcribed_input):
     # print(inspect.getmembers(transcribed_input))
     for result in transcribed_input.results:
         for w in result.alternatives[0].words:
-            output.append(word(w.word,
+            output.append(word(w.word.lower(),
                                w.start_time.seconds + w.start_time.nanos*1e-9,
                                w.end_time.seconds + w.end_time.nanos*1e-9,
                                w.confidence))
@@ -169,6 +196,13 @@ class word:
     def printer(self):
         print('Word: {}, s_time: {}, e_time: {}, conf: {}'.format(
             self.word, self.s_time, self.e_time, self.conf))
+
+
+class sentence_final:
+    def __init__(self, sen, s_index, e_index):
+        self.sen = sen
+        self.s_index = s_index
+        self.e_index = e_index
 
 
 def load_data():
