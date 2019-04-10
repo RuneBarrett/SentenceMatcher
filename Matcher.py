@@ -74,13 +74,12 @@ def matching(sentences, t_sentences):
 
 
 def test(sentences, t_sentences):
-    LOOK_AHEAD_BEHIND = 15
-    tester = 0
+    LOOK_AHEAD_BEHIND = 10
     next_startpoint = 0
     cur_startpoint = 0
     for sen_i, s in enumerate(sentences):
 
-        print(" -------- SENTENCE {}".format(sen_i))
+        print("-------- SENTENCE {} ---------".format(sen_i))
         str = ""
         i = -LOOK_AHEAD_BEHIND
         best_match = ""
@@ -98,7 +97,8 @@ def test(sentences, t_sentences):
             similarity = sim(s, str)
             if(similarity >= best_sim):
                 best_sim = similarity
-                best_match = "{}\n{} - {}".format(s, str, similarity)
+                best_match = "Original: {}\nBest Match: {} \n\nSimilarity: {}".format(
+                    s, str, similarity)
                 best_i = i
 
             #print(similarity, i)
@@ -125,21 +125,20 @@ def test(sentences, t_sentences):
             similarity = sim(s, str)
             if(similarity >= best_sim):
                 best_sim = similarity
-                best_match = "Original: {}\nBest Match: {} \n\nSimilarity: {}\n".format(
+                best_match = "Original: {}\nBest Match: {} \n\nSimilarity: {}".format(
                     s, str, similarity)
                 best_i_s = i
 
             #print(similarity, i)
             i += 1
 
-        print("\n{}Moved start pos amount: {} \nMoved end pos amount: {}\n --------------------".format(
-            best_match, best_i_s, best_i))
-        plus_minus = 10
         str2 = ""
         #print(best_i_s-plus_minus, best_i+plus_minus)
-        for b in t_sentences[cur_startpoint-plus_minus: next_startpoint+plus_minus]:
+        for b in t_sentences[cur_startpoint-LOOK_AHEAD_BEHIND: next_startpoint+LOOK_AHEAD_BEHIND]:
             str2 += b.word+" "
-        print("transcribed +- {}:\n{}\n".format(plus_minus, str2))
+        print("\n{}\n\nMoved start pos amount: {} \nMoved end pos amount: {}".format(
+            best_match, best_i_s, best_i))
+        print("\nTranscribed +- {}:\n{}\n ------------------------------ \n".format(LOOK_AHEAD_BEHIND, str2))
 
 
 def sim(w1, w2):
