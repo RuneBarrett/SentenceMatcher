@@ -74,20 +74,19 @@ def matching(sentences, t_sentences):
 
 
 def test(sentences, t_sentences):
-    LOOK_AHEAD_BEHIND = 5
+    LOOK_AHEAD_BEHIND = 15
     tester = 0
     next_startpoint = 0
     cur_startpoint = 0
-    for s in sentences:
+    for sen_i, s in enumerate(sentences):
 
-        print(" ---------------- \nstart: {} - {}".format(next_startpoint, s))
+        print(" -------- SENTENCE {}".format(sen_i))
         str = ""
         i = -LOOK_AHEAD_BEHIND
         best_match = ""
         best_i = 0
         best_sim = 0.0
 
-        # Find best end of sentence
         while i <= LOOK_AHEAD_BEHIND:
             cur_startpoint = next_startpoint
             arr = t_sentences[cur_startpoint:cur_startpoint +
@@ -96,18 +95,18 @@ def test(sentences, t_sentences):
             for a in arr:
                 str += a.word+" "
 
-            #print("i_e = {}: {}".format(i, str))
             similarity = sim(s, str)
             if(similarity >= best_sim):
                 best_sim = similarity
-                best_match = "{}\n{} - {}\n".format(s, str, similarity)
+                best_match = "{}\n{} - {}".format(s, str, similarity)
                 best_i = i
 
             #print(similarity, i)
             i += 1
+        print("Startpos: {} Endpos: {}".format(next_startpoint,
+                                               cur_startpoint + len(s.split()) + best_i))
 
         next_startpoint = cur_startpoint + len(s.split()) + best_i
-        #print("\n" + best_match)
 
         i = -LOOK_AHEAD_BEHIND
         best_sim = 0.0
@@ -126,16 +125,21 @@ def test(sentences, t_sentences):
             similarity = sim(s, str)
             if(similarity >= best_sim):
                 best_sim = similarity
-                best_match = "{}\n{} - {}\n".format(s, str, similarity)
+                best_match = "Original: {}\nBest Match: {} \n\nSimilarity: {}\n".format(
+                    s, str, similarity)
                 best_i_s = i
 
             #print(similarity, i)
             i += 1
-        print("\n" + best_match, best_i_s)
 
-        if(tester > 2):
-            break
-    #tester += 1
+        print("\n{}Moved start pos amount: {} \nMoved end pos amount: {}\n --------------------".format(
+            best_match, best_i_s, best_i))
+        plus_minus = 10
+        str2 = ""
+        #print(best_i_s-plus_minus, best_i+plus_minus)
+        for b in t_sentences[cur_startpoint-plus_minus: next_startpoint+plus_minus]:
+            str2 += b.word+" "
+        print("transcribed +- {}:\n{}\n".format(plus_minus, str2))
 
 
 def sim(w1, w2):
