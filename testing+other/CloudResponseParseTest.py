@@ -9,9 +9,9 @@ def main():
         response = pickle.load(input)
     print_it(response)
 
-    data = json.dumps(MessageToJson(response))
-    with open('data.json', 'w') as outfile:
-        json.dump(data, outfile)
+    #data = json.dumps(MessageToJson(response))
+    #with open('data.json', 'w') as outfile:
+    #    json.dump(data, outfile)
 
 
 def print_it(response):
