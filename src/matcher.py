@@ -10,37 +10,28 @@ def full_sentence_matching(sentences, t_words):
     """  As the transcription may not contain the same amount of words as the original sentence, this method tries to find the best sentence match by
          adding/removing words in the beginning and the end, and comparing the full sentences with a difference algorithm
     """
-    cur_endpoint, cur_startpoint, LOOK_AHEAD_BEHIND = -1, 0, 12
+    cur_endpoint, cur_startpoint, LOOK_AHEAD_BEHIND = -1, 0, 15
     sentences_final = []
 
     # loop through all sentences in the original text input
     for sen_i, orig_sen in enumerate(sentences):
-        print(len(orig_sen))
-        # reset vars
         best_i_e, best_i_s, best_sim, best_match = 0, 0, -1.0, ""
 
-        # ---------- Check for perfect match ----------
-        # print(join_and_compare_sentences(
-        #    t_words[cur_startpoint:cur_startpoint + len(orig_sen.split())],
-        #    orig_sen, best_sim, 0, 0, ""))
-
         # ---------- Find best end of sentence ----------
-
         # set the first index of the current sentence to the last index of previous sentence+1
         cur_startpoint = cur_endpoint+1
         i = -LOOK_AHEAD_BEHIND
         while i <= LOOK_AHEAD_BEHIND:
             trans_sen_section = t_words[cur_startpoint:cur_startpoint +  # the full sentence with the current lookahead taken from the transcribed words list
                                         (len(orig_sen.split())-1)+i]
-
-            # Join words to sentence, compare with the original, update "best" variables
+            # Join words to sentence, compare with the original, update "best" variables through join_and_compare_sentences
             best_i_e, best_sim, best_match = join_and_compare_sentences(
                 trans_sen_section, orig_sen, best_sim, i, best_i_e, best_match, sen_i)
             i += 1
 
         # ---------- Find best start of sentence ----------
         i = -LOOK_AHEAD_BEHIND
-        cur_endpoint = cur_startpoint + len(orig_sen.split())-2 + best_i_e
+        cur_endpoint = cur_startpoint + len(orig_sen.split())-1 + best_i_e-1
 
         while i <= LOOK_AHEAD_BEHIND and cur_startpoint > LOOK_AHEAD_BEHIND:
             trans_sen_section = t_words[cur_startpoint + i: cur_endpoint]
@@ -60,17 +51,18 @@ def full_sentence_matching(sentences, t_words):
 
 
 def join_and_compare_sentences(trans_sen_section, orig_sen, best_sim, i, best_i, best_match, sen_i):
-    sentence_holder_str = ""
-    for a in trans_sen_section:
-        sentence_holder_str += a.word+" "
+    #sentence_holder_str = ""
+    # for a in trans_sen_section:  # convert the transcribed array section to a string
+    #    sentence_holder_str += a.word+" "
+    # sentence_holder_str = sentence_holder_str.strip()  # remove trailing " "
 
+    sentence_holder_str = " ".join(a.word for a in trans_sen_section)
     similarity = sim(orig_sen, sentence_holder_str)
     # if(sen_i == 27):
     #    print(sentence_holder_str, similarity, "\n")
     if(similarity >= best_sim):
         best_sim = similarity
-
-        best_match = sentence_holder_str
+        best_match = sentence_holder_str.strip()
         best_i = i  # -1
     return best_i, best_sim, best_match
 
@@ -153,6 +145,7 @@ def test(sentences, t_sentences):
 
 
 def sim(w1, w2):
+    # Pythons seqencematcher fails for strings longer than 200 characters
     if(len(w1) >= 200):
         o_str1, t_str1, o_str2, t_str2 = w1[:199], w2[:199], w1[200:], w2[200:]
         similarity = SequenceMatcher(None, o_str1.lower(), t_str1.lower()).ratio() + SequenceMatcher(None, o_str2.lower(),
@@ -191,7 +184,7 @@ def sort_export(matched_sentences, transcribed_words, audio):
                   "start:", sim_s,
                   "end:", sim_e)
 
-            s_time = w_s.s_time*1000+180 if w_s.s_time > 0 else w_s.s_time*1000
+            s_time = w_s.s_time*1000+200 if w_s.s_time > 0 else w_s.s_time*1000
             # if (w_e.e_time-w_e.s_time) >= 0.1 else w_e.e_time*1000
             e_time = w_e.e_time*1000+500
             print(w_s.word, w_e.word, w_e.e_time-w_e.s_time)
@@ -207,8 +200,9 @@ def full_sentence_matcher_LOGGER(sen_i, cur_startpoint, cur_endpoint, best_sim, 
     print("---------------- SENTENCE {} -----------------".format(sen_i))
     print("Startpos: {} Endpos: {}".format(
         cur_startpoint, cur_endpoint))
-    print("StartTime: {} EndTime: {}".format(
-        t_words[cur_startpoint].s_time, t_words[cur_endpoint].e_time))
+    if(len(t_words) > cur_endpoint):
+        print("StartTime: {} EndTime: {}".format(
+            t_words[cur_startpoint].s_time, t_words[cur_endpoint].e_time))
     print("Similarity: {} \ns_pos correction: {} \ne_pos correction: {} ".format(
         best_sim, best_i_s, best_i_e))
     str2 = ""
