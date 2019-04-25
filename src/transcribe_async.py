@@ -28,7 +28,6 @@ def transcribe_batch(bucket_name, prefix, delimiter=None):
     for blob in blobs:
         print(blob.name)
         transcribe_gcs("abook_data/"+blob.name)
-        return
 
 
 def transcribe_file(speech_file):
