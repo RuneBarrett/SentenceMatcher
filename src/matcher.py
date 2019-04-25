@@ -4,6 +4,7 @@
 from difflib import SequenceMatcher
 import objects as obj
 import helpers as h
+import time
 
 
 def full_sentence_matching(sentences, t_words):
@@ -15,6 +16,7 @@ def full_sentence_matching(sentences, t_words):
 
     # loop through all sentences in the original text input
     for sen_i, orig_sen in enumerate(sentences):
+
         best_i_e, best_i_s, best_sim, best_match = 0, 0, -1.0, ""
 
         # ---------- Find best end of sentence ----------
@@ -32,7 +34,8 @@ def full_sentence_matching(sentences, t_words):
         # ---------- Find best start of sentence ----------
         i = -LOOK_AHEAD_BEHIND
         cur_endpoint = cur_startpoint + len(orig_sen.split())-1 + best_i_e-1
-
+        if(cur_endpoint > len(t_words)):
+            break
         while i <= LOOK_AHEAD_BEHIND and cur_startpoint > LOOK_AHEAD_BEHIND:
             trans_sen_section = t_words[cur_startpoint + i: cur_endpoint]
             best_i_s, best_sim, best_match = join_and_compare_sentences(
@@ -42,12 +45,18 @@ def full_sentence_matching(sentences, t_words):
         # Add the best match to the list of matched sentences
         sentences_final.append(obj.matched_sentence(
             orig_sen, best_match, best_sim, cur_startpoint+best_i_s, cur_endpoint))
-
+        print("{} - {}".format(len(t_words), cur_endpoint))
         # print the results during execution for analysis
         full_sentence_matcher_LOGGER(sen_i, cur_startpoint, cur_endpoint, best_sim, best_i_s,
                                      best_i_e, t_words, LOOK_AHEAD_BEHIND, orig_sen, best_match)
 
-    return sentences_final
+        #sentence_holder_str = " ".join(a.word for a in trans_sen_section)
+        # or abs(len(best_match)-len(sentence_holder_str) > 30)
+        if(best_match == "" or cur_endpoint > len(t_words)):
+            print("no match")
+            break
+            time.sleep(2)
+    return sentences_final, sen_i
 
 
 def join_and_compare_sentences(trans_sen_section, orig_sen, best_sim, i, best_i, best_match, sen_i):
