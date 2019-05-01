@@ -1,6 +1,6 @@
 import re
 
-ABBREVIATIONS = ["bl.a.", "f.eks.", "d.", "ca."]
+ABBREVIATIONS = [" bl.a.", " f.eks.", " d.", " ca."]
 MATCH_DIGIT_WORD_REGEX = r"\d|\w"
 DIGIT_NUMBERING_REGEX = r"\d+\."
 
@@ -51,7 +51,9 @@ def tokenize_and_clean_sentences(sentences):
         # print(" ".join(cleaned_tokens), "\n")
 
         # append the cleaned sentence to sentences_cleaned
-        sentences_cleaned.append(" ".join(cleaned_tokens))
+        s_c = " ".join(cleaned_tokens)
+        if len(s_c) > 0:
+            sentences_cleaned.append(s_c)
 
     return sentences_cleaned
     # print(s)
