@@ -140,9 +140,12 @@ def sort_export(matched_sentences, transcribed_words, audio, section):
                 print(w_s.word, w_e.word, w_e.e_time-w_e.s_time)
                 name = "{}_{}_{}-{}".format("%03d" % (section+2), "%04d" %
                                             j, "%06.1f" % w_s.s_time, "%06.1f" % w_e.e_time)
-                audio[s_time:e_time].export(
-                    "data/audio/output/{}_{}_{}-{}{}".format("%03d" % (section+2), "%04d" % j, "%06.1f" % w_s.s_time, "%06.1f" % w_e.e_time, ".mp3"), format="mp3")
-                csv_lines.append([name + "|" + sen.sen + "|" + sen.t_sen])
+                a_out = audio[s_time:e_time]
+                print(a_out.duration_seconds)
+                if(a_out.duration_seconds <= 12.0):
+                    a_out.export(
+                        "data/audio/output/{}_{}_{}-{}{}".format("%03d" % (section+2), "%04d" % j, "%06.1f" % w_s.s_time, "%06.1f" % w_e.e_time, ".wav"), format="wav")
+                    csv_lines.append([name + "|" + sen.sen + "|" + sen.t_sen])
                 # row = ['name', 'test']
                 # with open('output.csv', 'a') as csvFile:
                 #     writer = csv.writer(csvFile)
