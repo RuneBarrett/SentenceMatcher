@@ -110,3 +110,6 @@ venv.bak/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+#input data 
+/data/in_audio/

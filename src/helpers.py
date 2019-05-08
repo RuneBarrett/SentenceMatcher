@@ -16,12 +16,12 @@ def convert_transcript_to_word_objects(transcribed_input):
     return output
 
 
-def load_data(use_local_data=True, obj_name="response_obj.pkl"):
+def load_data(foldername, use_local_data=True, obj_name="response_obj.pkl", ):
     """Collects data either from the cloud or locally depending on use_local_data"""
     print("loading", obj_name)
     # pretranscribed sample data
     if use_local_data:
-        with open("data/obj_storage/"+obj_name, 'rb') as inp:
+        with open("data/obj_storage/"+foldername+"/"+obj_name, 'rb') as inp:
             response = pickle.load(inp)
 
     # collect data from google cloud STT

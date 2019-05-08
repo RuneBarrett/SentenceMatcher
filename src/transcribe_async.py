@@ -9,6 +9,7 @@ from google.cloud import storage
 Example usage:
     python transcribe_async.py data/audio/kap1_7pet_29.wav
     python transcribe_async.py gs://abook_data/7pet_wav/002-morten_skjoldager-syv_aar_for_pet-span_FFB.wav
+    python transcribe_async.py gs://abook_data/jytte_marketing/jytte.mp3.flac
 """
 # Instantiates a client
 storage_client = storage.Client()
@@ -16,7 +17,7 @@ CLIENT = speech.SpeechClient()
 
 # config variables
 LANGUAGE_CODE = "da-DK"
-HERTZ = 44100
+HERTZ = 32000
 ENCODING = speech.enums.RecognitionConfig.AudioEncoding.FLAC
 
 
@@ -58,7 +59,8 @@ def transcribe_gcs(gcs_uri):
 
     # create audio object from uri
     # pylint: disable=no-member
-    audio = speech.types.RecognitionAudio(uri="gs://"+gcs_uri)  # "gs://"+
+    print(gcs_uri)
+    audio = speech.types.RecognitionAudio(uri=gcs_uri)  # "gs://"+
     print(audio)
 
     # create a request configuration
@@ -98,8 +100,10 @@ def get_config():
 
 def save_object(obj, filename):
     """Saves the response object to a file"""
+    # filename = filename.replace(
+    #     "abook_data/7pet_flac/", "").replace(".mp3.flac", ".pkl")
     filename = filename.replace(
-        "abook_data/7pet_flac/", "").replace(".mp3.flac", ".pkl")
+        "abook_data/jytte_marketing/", "").replace(".mp3.flac", ".pkl")
     with open("data/obj_storage/"+filename, 'wb') as output:
         pickle.dump(obj, output, pickle.HIGHEST_PROTOCOL)
 
@@ -107,7 +111,9 @@ def save_object(obj, filename):
 if __name__ == '__main__':
     if(len(sys.argv) == 1):
         print("no args")
-        transcribe_batch("abook_data", "7pet_flac")
+        #transcribe_batch("abook_data", "7pet_flac")
+        #transcribe_batch("abook_data", "jytte_marketing")
+
     else:
         PARSER = argparse.ArgumentParser(
             description=__doc__,

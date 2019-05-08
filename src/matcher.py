@@ -12,7 +12,7 @@ def full_sentence_matching(sentences, t_words):
     """  As the transcription may not contain the same amount of words as the original sentence, this method tries to find the best sentence match by
          adding/removing words in the beginning and the end, and comparing the full sentences with a difference algorithm
     """
-    cur_endpoint, cur_startpoint, LOOK_AHEAD_BEHIND = -1, 0, 20
+    cur_endpoint, cur_startpoint, LOOK_AHEAD_BEHIND = -1, 0, 25
     sentences_final = []
 
     # loop through all sentences in the original text input
@@ -51,10 +51,11 @@ def full_sentence_matching(sentences, t_words):
             orig_sen, best_match, best_sim, cur_startpoint+best_i_s, cur_endpoint))
         print("{} - {} - {}".format(len(t_words), cur_startpoint, cur_endpoint))
 
-        # print the results during execution for analysis
+        # check whether there is a match or we should move on. (prints the results during execution, if last argument to the logger is True)
         if(cur_endpoint <= len(t_words) and cur_startpoint < cur_endpoint and len(best_match) > 0):
-            full_sentence_matcher_LOGGER(sen_i, cur_startpoint, cur_endpoint, best_sim, best_i_s,
-                                         best_i_e, t_words, LOOK_AHEAD_BEHIND, orig_sen, best_match)
+            if(True):  # log / dont log switch
+                full_sentence_matcher_LOGGER(sen_i, cur_startpoint, cur_endpoint, best_sim, best_i_s,
+                                             best_i_e, t_words, LOOK_AHEAD_BEHIND, orig_sen, best_match)
         else:
             print("{}, {}".format("no match 2, move on", sen_i))
             # time.sleep(4)
@@ -103,18 +104,18 @@ def sim(w1, w2):
     return similarity
 
 
-def sort_export(matched_sentences, transcribed_words, audio, section):
-    print("exporting")
+def sort_export(matched_sentences, transcribed_words, audio, section, custom_num):
+    print("--- Exporting")
     csv_lines = []
     for j, sen in enumerate(matched_sentences):
         if(sen.s_index < len(transcribed_words)):
-            print(sen.s_index, len(transcribed_words))
+            #print(sen.s_index, len(transcribed_words))
             w_s = transcribed_words[sen.s_index]
             if sen.e_index > len(transcribed_words):
                 sen.e_index = len(transcribed_words)-1
             w_e = transcribed_words[sen.e_index-1]
 
-            start_end_char_amount = int(len(sen.sen)*0.06)
+            start_end_char_amount = int(len(sen.sen)*0.1)
             if (start_end_char_amount < 5):
                 start_end_char_amount = 5
 
@@ -130,21 +131,21 @@ def sort_export(matched_sentences, transcribed_words, audio, section):
 
             if(sim_s > 0.7 and sim_e > 0.7):  # and w_e.e_time > w_s.s_time
                 print(w_s.s_time*1000, w_e.e_time*1000,
-                      "sim:", sen.similarity,
-                      "start:", sim_s,
-                      "end:", sim_e)
+                      "sim:", "%1.4f" % sen.similarity,
+                      "start:", "%1.4f" % sim_s,
+                      "end:", "%1.4f" % sim_e)
 
                 s_time = w_s.s_time*1000+300 if w_s.s_time > 0 else w_s.s_time*1000
                 # if (w_e.e_time-w_e.s_time) >= 0.1 else w_e.e_time*1000
                 e_time = w_e.e_time*1000+600
                 print(w_s.word, w_e.word, w_e.e_time-w_e.s_time)
-                name = "{}_{}_{}-{}".format("%03d" % (section+2), "%04d" %
+                name = "{}_{}_{}-{}".format("%03d" % (section+custom_num), "%04d" %
                                             j, "%06.1f" % w_s.s_time, "%06.1f" % w_e.e_time)
                 a_out = audio[s_time:e_time]
-                print(a_out.duration_seconds)
+                print("Output length: ", a_out.duration_seconds)
                 if(a_out.duration_seconds <= 12.0):
                     a_out.export(
-                        "data/audio/output/{}_{}_{}-{}{}".format("%03d" % (section+2), "%04d" % j, "%06.1f" % w_s.s_time, "%06.1f" % w_e.e_time, ".wav"), format="wav")
+                        "data/output/wavs/{}_{}_{}-{}{}".format("%03d" % (section+custom_num), "%04d" % j, "%06.1f" % w_s.s_time, "%06.1f" % w_e.e_time, ".wav"), format="wav")
                     csv_lines.append([name + "|" + sen.sen + "|" + sen.t_sen])
                 # row = ['name', 'test']
                 # with open('output.csv', 'a') as csvFile:
